@@ -254,11 +254,12 @@ def _py_get_length_field(expr):
     Otherwise, just reference the structure field directly.
     '''
     if expr.lenfield_name is not None:
-        for grandparent in expr.parent.parents:
-            # This would be nicer if Request had an is_request attribute...
-            if hasattr(grandparent, "opcode"):
-                return expr.lenfield_name
-        return 'self.%s' % expr.lenfield_name
+        if hasattr(expr.parent, "parents"):
+            for grandparent in expr.parent.parents:
+                # This would be nicer if Request had an is_request attribute...
+                if hasattr(grandparent, "opcode"):
+                    return expr.lenfield_name
+            return 'self.%s' % expr.lenfield_name
     else:
         return str(expr.nmemb)
 
@@ -272,7 +273,7 @@ def _py_get_expr(expr):
     lenexp = _py_get_length_field(expr)
 
     if expr.op != None:
-        return '(' + _py_get_expr(expr.lhs) + ' ' + expr.op + ' ' + _py_get_expr(expr.rhs) + ')'
+        return "({0} {1} {2})".format(_py_get_expr(expr.lhs), expr.op, _py_get_expr(expr.rhs))
     elif expr.bitfield:
         return 'xcb.popcount(' + lenexp + ')'
     else:
